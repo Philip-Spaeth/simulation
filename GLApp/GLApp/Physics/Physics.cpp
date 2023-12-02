@@ -82,7 +82,7 @@ bool Physics::Calc()
         {
 
             //build a new tree
-            octree = new Octree(glm::dvec3(0, 0, 0), maxDistance*2, theta);
+            octree = new Octree(glm::dvec3(0, 0, 0), maxDistance * 2, theta);
             octree->buildTree(currentParticles);
 
 
@@ -125,7 +125,7 @@ bool Physics::Calc()
                 {
                     // Berechne die Gesamtkraft auf das Partikel
                     glm::dvec3 totalForce = { 0,0,0 };
-                    totalForce = octree->calculateForces(currentParticles[p]);
+                    totalForce = octree->calculateForces(currentParticles[p], totalEnergie, calulations);
 
                     //glm::dvec3 totalForce = octree->calculateGravitationalForce(currentParticles[p], G, softening);
 

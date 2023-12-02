@@ -33,7 +33,7 @@ int Node::GetHeight() const
 	}
 }
 
-glm::dvec3 Node::calcForce(Particle& p)
+glm::dvec3 Node::calcForce(Particle& p, std::vector<std::vector<double>>& totalEnergie, int& calulations)
 {
 	double G = 6.67408e-11;
 
@@ -48,6 +48,7 @@ glm::dvec3 Node::calcForce(Particle& p)
 			double forceMagnitude = (G * particle.mass * p.mass) / (distance * distance);
 			glm::dvec3 Force = forceMagnitude * glm::normalize(delta);
 			force += Force;
+			calulations++;
 		}
 	}
 	else 
@@ -66,6 +67,7 @@ glm::dvec3 Node::calcForce(Particle& p)
 			double forceMagnitude = (G * mass * p.mass) / (distance * distance);
 			glm::dvec3 Force = forceMagnitude * glm::normalize(delta);
 			force += Force;
+			calulations++;
 		}
 		else
 		{
@@ -74,7 +76,7 @@ glm::dvec3 Node::calcForce(Particle& p)
 			{
 				if(child != nullptr)
 				{
-					force += child->calcForce(p);
+					force += child->calcForce(p, totalEnergie, calulations);
 				}
 			}
 		}

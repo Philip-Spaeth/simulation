@@ -14,7 +14,7 @@ public:
 	~Node();
 
 	void insert(Particle& p);
-	glm::dvec3 calcForce(Particle& p);
+	glm::dvec3 calcForce(Particle& p, std::vector<std::vector<double>>& totalEnergie, int& calulations);
 	int GetHeight() const;
     void calcMass();
 

@@ -13,7 +13,7 @@ public:
     ~Octree();
 
     void buildTree(std::vector<Particle>& particles);
-    glm::dvec3 calculateForces(Particle& particle);
+    glm::dvec3 calculateForces(Particle& particle, std::vector<std::vector<double>> &totalEnergie, int &calulations);
 private:
 
 	Node* root;
