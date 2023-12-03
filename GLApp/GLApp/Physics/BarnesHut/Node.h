@@ -14,9 +14,9 @@ public:
 	~Node();
 
 	void insert(Particle& p);
-	glm::dvec3 calcForce(Particle& p, std::vector<std::vector<double>>& totalEnergie, int& calulations);
-	int GetHeight() const;
+	glm::dvec3 calcForce(Particle& p, double& totalEnergie, int& calulations);
     void calcMass();
+	void clear();
 
 	Node* child[8] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 

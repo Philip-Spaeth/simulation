@@ -11,9 +11,9 @@ class Octree {
 public:
     Octree(glm::dvec3 center, double radius, double theta);
     ~Octree();
-
+    void clearTree();
     void buildTree(std::vector<Particle>& particles);
-    glm::dvec3 calculateForces(Particle& particle, std::vector<std::vector<double>> &totalEnergie, int &calulations);
+    glm::dvec3 calculateForces(Particle& particle, double& totalEnergie, int &calulations);
 private:
 
 	Node* root;

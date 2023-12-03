@@ -8,12 +8,12 @@
 void SystemInit::start(std::vector<Particle>& particles)
 {
 	//solarSystem(particles);
-	ourSolarSystem(particles);
+	//ourSolarSystem(particles);
 
 	//ellipticalGalaxy(0, 999, { 0,0,0 }, { 0,300,0 }, { 0,0,0 }, particles);
 	//ellipticalGalaxy(1000, 1999, { 2e22, 0, 0}, { 90,0,180 }, { 0,0,0 } , particles);
 	
-	//spiralGalaxy(0, 999, { 0,0,0 }, { 0, 0, 0}, { 0,0,0 }, particles);
+	spiralGalaxy(0, 999, { 1,-1,1 }, { 0, 0, 0}, { 0,0,0 }, particles);
 	//spiralGalaxy(3000, 3999, { 1.5e22, 0.5e22, 0 }, { 234,30,129 }, { 0,0,0 }, particles);
 }
 
@@ -73,15 +73,15 @@ void SystemInit::spiralGalaxy(int startIndex, int endIndex, glm::dvec3 position,
 			}
 			else
 			{
-				double r = physics.random(0, physics.random(0, BulgeRadius));
-				double depth = physics.random(0, physics.random(0, physics.random(0, BulgeRadius)));
+				double r = physics.random(0, BulgeRadius);
+				double depth = physics.random(0, BulgeRadius);
 
 				double angle = physics.random(0, 2 * 3.14);
 
 				double v = std::sqrt((physics.G * 1e36) / r);
 				particles[j].position = glm::dvec3(r * std::cos(angle), r * std::sin(angle), physics.random(-depth, depth)) + position; 
 				particles[j].velocity = glm::dvec3(-v * std::sin(angle), v * std::cos(angle), 0) + velocity;
-				particles[j].mass = 1e30;
+				particles[j].mass = physics.random(1e29, 1e31);
 				particles[j].radius = 0.01;
 				particles[j].color = glm::vec3(1, 1, 1);
 			}
@@ -89,15 +89,15 @@ void SystemInit::spiralGalaxy(int startIndex, int endIndex, glm::dvec3 position,
 		//disk 
 		else if (j >= diskStart && j < diskEnd)
 		{
-			double r = physics.random(0, physics.random(0, diskRadius));
-			double depth = physics.random(0, physics.random(0, physics.random(0, diskRadius)));
+			double r = physics.random(0, diskRadius);
+			double depth = physics.random(0, diskRadius);
 
 			double armAngle = 2 * 3.14 * ((j - startIndex) * 1000 / particles.size()) / numArms;
 
 			double v = std::sqrt((physics.G * 1e36) / r);
 			particles[j].position = glm::dvec3(r * std::cos(armAngle), r * std::sin(armAngle), physics.random(-depth, depth)) + position;
 			particles[j].velocity = glm::dvec3(-v * std::sin(armAngle), v * std::cos(armAngle), 0) + velocity;
-			particles[j].mass = 1e30;
+			particles[j].mass = physics.random(1e29, 1e31);
 			particles[j].radius = 0.01;
 			particles[j].color = glm::vec3(1, 1, 1);
 		}
@@ -113,7 +113,7 @@ void SystemInit::spiralGalaxy(int startIndex, int endIndex, glm::dvec3 position,
 			double v = std::sqrt((physics.G * 1e36) / r);
 			particles[j].position = glm::dvec3(r * std::cos(angle), r * std::sin(angle), physics.random(-depth, depth)) + position;
 			particles[j].velocity = glm::dvec3(-v * std::sin(angle), v * std::cos(angle), 0) + velocity;
-			particles[j].mass = 1e32;
+			particles[j].mass = physics.random(1e29, 1e31);
 			particles[j].radius = 0.01;
 			particles[j].color = glm::vec3(1, 1, 1);
 			particles[j].darkMatter = true;

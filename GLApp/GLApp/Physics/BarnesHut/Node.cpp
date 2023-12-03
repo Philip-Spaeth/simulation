@@ -13,27 +13,7 @@ Node::~Node()
 {
 }
 
-int Node::GetHeight() const 
-{
-	if (isLeaf)
-	{
-		return 0;
-	}
-	else {
-		int maxHeight = 0;
-		for (Node* child : child) 
-		{
-			if (child != nullptr)
-			{
-				int childHeight = child->GetHeight();
-				maxHeight = std::max(maxHeight, childHeight);
-			}
-		}
-		return 1 + maxHeight;
-	}
-}
-
-glm::dvec3 Node::calcForce(Particle& p, std::vector<std::vector<double>>& totalEnergie, int& calulations)
+glm::dvec3 Node::calcForce(Particle& p, double& totalEnergie, int& calulations)
 {
 	double G = 6.67408e-11;
 
@@ -48,6 +28,7 @@ glm::dvec3 Node::calcForce(Particle& p, std::vector<std::vector<double>>& totalE
 			double forceMagnitude = (G * particle.mass * p.mass) / (distance * distance);
 			glm::dvec3 Force = forceMagnitude * glm::normalize(delta);
 			force += Force;
+			totalEnergie += p.calcPotentialEnergie(particle, G, 0);
 			calulations++;
 		}
 	}
@@ -67,6 +48,8 @@ glm::dvec3 Node::calcForce(Particle& p, std::vector<std::vector<double>>& totalE
 			double forceMagnitude = (G * mass * p.mass) / (distance * distance);
 			glm::dvec3 Force = forceMagnitude * glm::normalize(delta);
 			force += Force;
+			Particle p2 = Particle(massCenter, mass);
+			totalEnergie += p.calcPotentialEnergie(p2, G, 0);
 			calulations++;
 		}
 		else
@@ -109,6 +92,10 @@ void Node::insert(Particle& p)
 		{
 			quadrant += 4;
 		}
+
+		// Print debugging information
+		//std::cout << "Inserting particle in node " << index << " mass: " << mass << " radius: " << radius << std::endl;
+
 
 		if (child[quadrant] == nullptr) 
 		{
@@ -160,6 +147,7 @@ void Node::insert(Particle& p)
 			}
 			child[quadrant] = new Node(newCenter, newRadius, theta, index+1);
 		}
+
 		child[quadrant]->insert(p);
 
 		if(particle.position != p.position)
@@ -186,6 +174,8 @@ void Node::insert(Particle& p)
 				double newRadius = radius / 2;
 				switch (quadrant)
 				{
+
+					// Adjust newCenter based on the quadrant
 				case 0:
 					newCenter.x -= newRadius;
 					newCenter.y -= newRadius;
@@ -227,14 +217,15 @@ void Node::insert(Particle& p)
 					newCenter.z += newRadius;
 					break;
 				}
+				// Create the new child node
 				child[quadrant] = new Node(newCenter, newRadius, theta, index + 1);
 			}
-			child[quadrant]->insert(particle);
+			// Recursively insert the particle into the appropriate child node
+			child[quadrant]->insert(p);
 
+			// Update mass (mass is the sum of the masses of all particles in the node)
 			mass += p.mass;
 		}
-
-		
 	}
 	//std::cout << "inserted particle " << "in node " << index <<"  mass: " << mass << "radius: "<< radius << std::endl;
 }
@@ -263,3 +254,17 @@ void Node::calcMass()
 	}
 }
 
+void Node::clear()
+{
+	if (!isLeaf)
+	{
+		for (Node* child : child)
+		{
+			if (child != nullptr)
+			{
+				child->clear();
+				delete child;
+			}
+		}
+	}
+}

@@ -75,19 +75,72 @@ bool Physics::Calc()
 					maxDistance = distance;
 				}
 			}
+            octree = new Octree(glm::dvec3(0, 0, 0), maxDistance * 2, theta);
         }
 
 
         else
         {
-
-            //build a new tree
-            octree = new Octree(glm::dvec3(0, 0, 0), maxDistance * 2, theta);
+            octree->clearTree();
+            //build a new tree (inefficient)
             octree->buildTree(currentParticles);
 
+            //Other methods
+            if (calculationMethod != 0)
+            {
+                // particlesSize ist die Anzahl der Partikel
+                for (int p = 0; p <currentParticles.size(); ++p)
+                {
+                    // Berechne die Gesamtkraft auf das Partikel
+                    glm::dvec3 totalForce = { 0,0,0 };
+                    double potentialEnergie = 0;
+                    //totalForce = octree->calculateForces(currentParticles[p], potentialEnergie, calulations);
 
-            //Runge Kuta 
-            if(calculationMethod == 0)
+                    totalEnergie[t][p] += potentialEnergie;
+                    totalEnergie[t][p] += currentParticles[p].calcKineticEnergie();
+
+                    //semi implicit euler
+                    if (calculationMethod == 1)
+                    {
+						currentParticles[p].eulerUpdateVelocity(currentParticles[p].calcAcceleration(totalForce), deltaTime);
+						currentParticles[p].eulerUpdatePosition(currentParticles[p].velocity, deltaTime);
+					}
+
+                    //Drift-Kick-Drift leapfrog
+                    if (calculationMethod == 2)
+                    {
+                        currentParticles[p].leapfrogUpdatePosition(currentParticles[p].velocity, deltaTime / 2);
+                        currentParticles[p].leapfrogUpdateVelocity(currentParticles[p].calcAcceleration(totalForce), deltaTime);
+                        currentParticles[p].leapfrogUpdatePosition(currentParticles[p].velocity, deltaTime / 2);
+					}
+
+                    //Work not with barnes hut
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                    // Kick-Drift-Kick leapfrog
+                    if (calculationMethod == 3)
+                    {
+                        currentParticles[p].leapfrogUpdateVelocity(currentParticles[p].calcAcceleration(totalForce), deltaTime / 2);
+                        currentParticles[p].leapfrogUpdatePosition(currentParticles[p].velocity, deltaTime);
+
+                        glm::dvec3 totalForce(0.0, 0.0, 0.0);
+                        for (size_t j = 0; j < currentParticles.size(); j++)
+                        {
+                            if (p != j)
+                            {
+                                Particle& otherParticle = currentParticles[j];
+                                glm::dvec3 force = currentParticles[p].calculateGravitationalForce(otherParticle, G, softening, deltaTime);
+                                totalEnergie[t][p] += currentParticles[p].calcPotentialEnergie(otherParticle, G, 0);
+                                totalForce += force;
+                                calulations++;
+                            }
+                        }
+                        currentParticles[p].leapfrogUpdateVelocity(currentParticles[p].calcAcceleration(totalForce), deltaTime / 2);
+                    }
+
+                }
+            }
+            //Runge Kuta only works on small deltaTimes
+            if (calculationMethod == 0)
             {
                 for (int k = 0; k < 4; k++) {
                     // Runge Kuta schritt fuer jeden Particle
@@ -106,7 +159,7 @@ bool Physics::Calc()
                                 calulations++;
                             }
                         }
-                        totalEnergie[t][p] = currentParticles[p].calcKineticEnergie();
+                        totalEnergie[t][p] += currentParticles[p].calcKineticEnergie();
 
                         //Runge-Kutta Schritte berechnen
                         currentParticles[p].rungeKuttaUpdateVelocity(currentParticles[p].calcAcceleration(totalForce), deltaTime, k);
@@ -114,78 +167,6 @@ bool Physics::Calc()
                     }
                 }
             }
-
-
-
-            //Other methods
-            if (calculationMethod != 0)
-            {
-                // particlesSize ist die Anzahl der Partikel
-                for (int p = 0; p <currentParticles.size(); ++p)
-                {
-                    // Berechne die Gesamtkraft auf das Partikel
-                    glm::dvec3 totalForce = { 0,0,0 };
-                    totalForce = octree->calculateForces(currentParticles[p], totalEnergie, calulations);
-
-                    //glm::dvec3 totalForce = octree->calculateGravitationalForce(currentParticles[p], G, softening);
-
-                    /*
-                    for (size_t j = 0; j <currentParticles.size(); j++)
-                    {
-                        if (p != j)
-                        {
-                            Particle& otherParticle =currentParticles[j];
-                            glm::dvec3 force = currentParticles[p].calculateGravitationalForce(otherParticle, G, softening, deltaTime);
-                            totalEnergie[t][p] +=currentParticles[p].calcPotentialEnergie(otherParticle, G, 0);
-                            totalForce += force;
-                            calulations++;
-                        }
-                    }
-                    */
-
-                    totalEnergie[t][p] += currentParticles[p].calcKineticEnergie();
-
-                    // Kick-Drift-Kick leapfrog
-                    if (calculationMethod == 3)
-                    {
-						currentParticles[p].leapfrogUpdateVelocity(currentParticles[p].calcAcceleration(totalForce), deltaTime/2);
-						currentParticles[p].leapfrogUpdatePosition(currentParticles[p].velocity, deltaTime);
-
-                        glm::dvec3 totalForce(0.0, 0.0, 0.0);
-                        for (size_t j = 0; j < currentParticles.size(); j++)
-                        {
-                            if (p != j)
-                            {
-                                Particle& otherParticle = currentParticles[j];
-                                glm::dvec3 force = currentParticles[p].calculateGravitationalForce(otherParticle, G, softening, deltaTime);
-                                totalEnergie[t][p] += currentParticles[p].calcPotentialEnergie(otherParticle, G, 0);
-                                totalForce += force;
-                                calulations++;
-                            }
-                        }
-                        currentParticles[p].leapfrogUpdateVelocity(currentParticles[p].calcAcceleration(totalForce), deltaTime / 2);
-					}
-
-                    //semi implicit euler
-                    if (calculationMethod == 1)
-                    {
-						currentParticles[p].eulerUpdateVelocity(currentParticles[p].calcAcceleration(totalForce), deltaTime);
-						currentParticles[p].eulerUpdatePosition(currentParticles[p].velocity, deltaTime);
-					}
-
-                    //Drift-Kick-Drift leapfrog
-                    if (calculationMethod == 2)
-                    {
-                        currentParticles[p].leapfrogUpdatePosition(currentParticles[p].velocity, deltaTime / 2);
-                        currentParticles[p].leapfrogUpdateVelocity(currentParticles[p].calcAcceleration(totalForce), deltaTime);
-                        currentParticles[p].leapfrogUpdatePosition(currentParticles[p].velocity, deltaTime / 2);
-					}
-                    //set the force to 0
-                    currentParticles[p].force = { 0,0,0 };
-                }
-            }
-            // Aktualisiere den Octree basierend auf den neuen Partikelpositionen
-
 
             fileManager->saveParticles(t, currentParticles, "Data");
 
